@@ -26,12 +26,18 @@ Fill this in as you go. Bullet points are fine — be specific, not long.
 ## Defect 2: Proxy cannot reach the backend
 
 ### Symptom / error output
+* Integration test failed on `GET /api/info` with `HTTP Error 502: Bad Gateway`.
+* Proxy log showed: `connect() failed (111: Connection refused) while connecting to upstream ... upstream: "http://127.0.0.1:8080/api/info"`.
 
 ### How I diagnosed it
+* Executed `./scripts/run-tests.sh` and inspected the Nginx reverse-proxy logs (`proxy-1`).
 
 ### Root cause
+* In `proxy/nginx.conf`, `proxy_pass` was set to `http://127.0.0.1:8080`.
+* In a multi-container Docker Compose setup, `127.0.0.1` refers to the `proxy` container's loopback interface rather than the `backend` service container.
 
 ### Fix
+* Updated `proxy_pass` in `proxy/nginx.conf` to target `http://backend:8080`, using Docker Compose internal network DNS resolution.
 
 ---
 
