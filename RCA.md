@@ -7,12 +7,19 @@ Fill this in as you go. Bullet points are fine — be specific, not long.
 ## Defect 1: Proxy image fails to build
 
 ### Symptom / error output
+* `docker compose build` failed during the `proxy` image build step.
+* Output error: `E: Sub-process /usr/bin/dpkg returned an error code (1)` with `end of file on stdin at conffile prompt`.
 
 ### How I diagnosed it
+* Ran `./scripts/run-tests.sh` and inspected the complete build output log for the `proxy` container instead of just reading the final error line.
 
 ### Root cause
+* In `proxy/Dockerfile`, `COPY nginx.conf /etc/nginx/nginx.conf` was executed before `apt-get install -y nginx`.
+* Installing `nginx` afterwards created an interactive prompt asking whether to overwrite the pre-existing configuration file, causing `apt-get` to fail in non-interactive Docker build mode.
 
 ### Fix
+* Reordered `proxy/Dockerfile` to run `apt-get update && apt-get install` before copying `nginx.conf`.
+* Added `ENV DEBIAN_FRONTEND=noninteractive` to prevent future interactive prompts.
 
 ---
 
