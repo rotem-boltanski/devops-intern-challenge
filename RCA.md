@@ -44,12 +44,18 @@ Fill this in as you go. Bullet points are fine — be specific, not long.
 ## Defect 3: Tests still fail after fixing defect 2
 
 ### Symptom / error output
+* Integration test suite crashed with `HTTP Error 502: Bad Gateway` because `test-runner` executed queries before `backend` was fully listening on port 8080.
+* Additionally, using `curl` for the Docker healthcheck failed because the `python:3.11-alpine` base image lacks pre-installed `curl`.
 
 ### How I diagnosed it
+* Analyzed startup log timestamps in `./scripts/run-tests.sh` and observed `Backend listening on port 8080...` printed after `test-runner` failed.
 
 ### Root cause
+* Race condition due to Docker Compose starting containers concurrently without verifying application-level service readiness.
 
 ### Fix, and why I chose it over the alternatives
+* Added a Python-native `healthcheck` (`urllib.request`) to the `backend` service in `docker-compose.yml` and enforced `depends_on` with `condition: service_healthy` for dependent services.
+* **Why this fix**: Native Docker healthchecks eliminate race conditions cleanly without adding unneeded OS packages to minimal Alpine images or resorting to arbitrary `sleep` delays.
 
 ---
 
