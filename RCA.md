@@ -62,12 +62,17 @@ Fill this in as you go. Bullet points are fine — be specific, not long.
 ## Defect 4: CI pipeline fails
 
 ### Symptom / error output
+* GitHub Actions CI pipeline failed immediately with:
+  `./scripts/run-tests.sh: Permission denied` (exit code 126).
 
 ### How I diagnosed it
+* Checked the failure logs in the GitHub Actions PR tab.
 
 ### Root cause
+* File execution permissions (`+x`) for `scripts/run-tests.sh` were not tracked in Git's index (`100644` instead of `100755`), preventing the Linux runner in CI from executing the script.
 
 ### Fix
+* Updated file mode permissions in Git using `git update-index --chmod=+x scripts/run-tests.sh`.
 
 ---
 
